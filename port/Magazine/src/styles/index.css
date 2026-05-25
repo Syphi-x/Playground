@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease forwards;
+}
+
+@layer components {
+  .nav-link {
+    @apply px-3 py-2 text-sm font-medium text-gray-700 hover:text-[#14468C] hover:bg-blue-50 whitespace-nowrap transition-colors rounded-sm;
+  }
+  .nav-link-active {
+    @apply px-3 py-2 text-sm font-bold text-[#14468C] border-b-2 border-[#14468C] whitespace-nowrap;
+  }
+  .section-badge {
+    @apply inline-block bg-[#14468C] text-white text-xs px-3 py-1 uppercase tracking-wider font-semibold;
+  }
+  .sidebar-card {
+    @apply bg-white border border-gray-200 rounded-sm p-4;
+  }
+  .location-card {
+    @apply border border-gray-200 rounded-sm p-4 bg-white hover:border-[#14468C] transition-colors;
+  }
+  .activity-chip {
+    @apply bg-gray-100 text-gray-800 text-sm px-3 py-2 rounded-sm text-center hover:bg-[#14468C] hover:text-white transition-colors cursor-pointer;
+  }
+  .news-item {
+    @apply border-l-4 border-[#14468C] pl-3 py-1 hover:bg-gray-50 cursor-pointer transition-colors;
+  }
+}
