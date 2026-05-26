@@ -1,0 +1,15 @@
+services:
+  magazine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: magazine-app
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    networks:
+      - web-net
+
+networks:
+  web-net:
+    driver: bridge
