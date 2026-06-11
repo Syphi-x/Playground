@@ -1,7 +1,7 @@
 const tabConfig = [
   { id: "tabla", label: "Tabla" },
   { id: "partidos", label: "Partidos" },
-  { id: "leaderboard", label: "Leaderboard" },
+  { id: "leaderboard", label: "Lideres" },
 ];
 
 export function Tabs({ active, onChange }) {
