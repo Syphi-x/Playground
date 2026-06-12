@@ -22,5 +22,5 @@ export const userPicks = [
   { id: "17", name: "ESTRELLA", teamIds: ["448", "477", "2597", "624"] }, // Inglaterra, Croacia, Cabo Verde, Argelia
   { id: "18", name: "IRVING", teamIds: ["449", "464", "475", "2570"] }, // Holanda, Noruega, Suiza, Uzbekistán
   { id: "19", name: "CHICHA", teamIds: ["481", "206", "627", "467"] }, // Alemania, Canadá, Japón, Sudáfrica
-  { id: "20", name: "TIO VICK", teamIds: ["481", "660", "2597", "659"] }, // Alemania, EUA, Cabo Verde, Túnez
+  { id: "20", name: "PROFE VICK", teamIds: ["481", "660", "2597", "659"] }, // Alemania, EUA, Cabo Verde, Túnez
 ];
