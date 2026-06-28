@@ -6,7 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { fetchAllMatches, fetchStandings } from "../services/espnApi";
+import { fetchCalendarByDate, fetchStandings } from "../services/espnApi";
 import {
   mergeTeamForms,
   parseScoreboard,
@@ -26,6 +26,14 @@ const WorldCupContext = createContext(null);
 
 const REFRESH_MS = 60_000;
 
+function getTodayYYYYMMDD() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}${mm}${dd}`;
+}
+
 export function WorldCupProvider({ children }) {
   const [teams, setTeams] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -37,9 +45,11 @@ export function WorldCupProvider({ children }) {
   const refresh = useCallback(async () => {
     try {
       setError(null);
+      const dateStr = getTodayYYYYMMDD();
       const [standingsData, scoreboardData] = await Promise.all([
         fetchStandings(),
-        fetchAllMatches(),
+        // Usar el calendario ESPN para la fecha actual
+        fetchCalendarByDate(dateStr),
       ]);
 
       const { teams: parsedTeams, groups: parsedGroups } =
@@ -54,7 +64,40 @@ export function WorldCupProvider({ children }) {
         teamGroupMap,
       );
 
-      setTeams(mergeTeamForms(parsedTeams, teamForms));
+      // Merge forms first
+      let merged = mergeTeamForms(parsedTeams, teamForms);
+
+      // Ajuste local: sumar los puntos de los partidos ya finalizados del día
+      // Esto corrige el caso en que el endpoint de standings aún no refleja
+      // el resultado del partido más reciente consultado por el scoreboard.
+      const todaysAwards = {};
+      for (const m of parsedMatches) {
+        if (!m || m.status === "scheduled") continue;
+        const homeScore = Number(m.homeScore ?? 0);
+        const awayScore = Number(m.awayScore ?? 0);
+        let homePts = 0;
+        let awayPts = 0;
+        if (!Number.isNaN(homeScore) && !Number.isNaN(awayScore)) {
+          if (homeScore > awayScore) homePts = 3;
+          else if (homeScore < awayScore) awayPts = 3;
+          else {
+            homePts = 1;
+            awayPts = 1;
+          }
+        }
+        todaysAwards[m.homeTeamId] =
+          (todaysAwards[m.homeTeamId] || 0) + homePts;
+        todaysAwards[m.awayTeamId] =
+          (todaysAwards[m.awayTeamId] || 0) + awayPts;
+      }
+
+      // Aplicar el ajuste sólo sumando los puntos calculados para el día
+      merged = merged.map((t) => ({
+        ...t,
+        points: (t.points || 0) + (todaysAwards[t.id] || 0),
+      }));
+
+      setTeams(merged);
       setGroups(parsedGroups);
       setMatches(parsedMatches);
       setLastUpdated(new Date());
@@ -85,7 +128,9 @@ export function WorldCupProvider({ children }) {
   );
 
   return (
-    <WorldCupContext.Provider value={value}>{children}</WorldCupContext.Provider>
+    <WorldCupContext.Provider value={value}>
+      {children}
+    </WorldCupContext.Provider>
   );
 }
 

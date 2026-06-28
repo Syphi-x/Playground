@@ -121,6 +121,8 @@ export function parseScoreboard(data, teamGroupMap) {
       date: competition.date ?? event.date,
       homeTeamId: homeId,
       awayTeamId: awayId,
+      // stage: e.g. 'round-of-32', 'group', etc.
+      stage: event.season?.slug ?? competition.season?.slug ?? "",
       homeScore: status !== "scheduled" && hasScore ? homeScore : undefined,
       awayScore: status !== "scheduled" && hasScore ? awayScore : undefined,
       status,

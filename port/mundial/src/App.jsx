@@ -4,6 +4,7 @@ import { Tabs } from "./components/Tabs";
 import { StandingsTable } from "./components/StandingsTable";
 import { WeekMatches } from "./components/WeekMatches";
 import { Leaderboard } from "./components/Leaderboard";
+import { Bracket } from "./components/Bracket";
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState("tabla");
@@ -58,6 +59,7 @@ function AppContent() {
           {activeTab === "tabla" && <StandingsTable />}
           {activeTab === "partidos" && <WeekMatches />}
           {activeTab === "leaderboard" && <Leaderboard />}
+          {activeTab === "cuadro" && <Bracket />}
         </div>
       </main>
     </div>
