@@ -39,6 +39,8 @@
  * @property {string} group
  * @property {MatchTeam} [homeTeam]
  * @property {MatchTeam} [awayTeam]
+ * @property {string} [winnerTeamId]
+ * @property {boolean} [isPenaltyShootout]
  * @property {string} [venue]
  */
 
