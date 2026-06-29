@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { WorldCupProvider, useWorldCup } from "./context/WorldCupContext";
+import { ESPN_MX } from "./config/espnMexico";
+import { getLocalDateKey } from "./config/tournamentWeeks";
 import { Tabs } from "./components/Tabs";
 import { StandingsTable } from "./components/StandingsTable";
 import { WeekMatches } from "./components/WeekMatches";
@@ -25,12 +27,14 @@ function AppContent() {
             </div>
             <div className="flex flex-col items-end gap-1">
               <a
-                href="https://www.espn.com.mx/futbol/calendario/_/liga/fifa.world"
+                href={ESPN_MX.calendarUrl(
+                  getLocalDateKey(new Date().toISOString()).replaceAll("-", ""),
+                )}
                 target="_blank"
                 rel="noreferrer"
                 className="hidden text-sm text-gray-400 hover:text-white sm:block"
               >
-                Calendario oficial ESPN MX ↗
+                Calendario oficial ESPN MX de hoy ↗
               </a>
               {lastUpdated && (
                 <button

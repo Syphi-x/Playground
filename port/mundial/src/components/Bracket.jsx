@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useWorldCup } from "../context/WorldCupContext";
 import { TeamLogo } from "./TeamLogo";
-import { fetchAllMatches, fetchStandings } from "../services/espnApi";
-import { parseScoreboard, parseStandings } from "../services/espnParser";
 
 const ESPN_BRACKET_URL = "https://www.espn.com.mx/futbol/cuadro";
-const REFRESH_MS = 60_000;
 
 const ROUND_ORDER = [
   "round-of-32",
@@ -255,66 +253,24 @@ function ErrorState({ message }) {
 }
 
 export function Bracket() {
-  const [matchesByStage, setMatchesByStage] = useState({});
-  const [teamMap, setTeamMap] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { teams, matches, loading, error } = useWorldCup();
   const [activeStage, setActiveStage] = useState("round-of-32");
+
+  const teamMap = useMemo(
+    () => Object.fromEntries(teams.map((team) => [team.id, team])),
+    [teams],
+  );
 
   const columns = useMemo(
     () =>
       getStageTabs().map((tab) => ({
         ...tab,
-        matches: matchesByStage[tab.stage] ?? [],
+        matches: matches
+          .filter((match) => match.stage === tab.stage)
+          .sort((a, b) => new Date(a.date) - new Date(b.date)),
       })),
-    [matchesByStage],
+    [matches],
   );
-
-  useEffect(() => {
-    let alive = true;
-
-    const loadBracket = async () => {
-      try {
-        setError(null);
-        const [standingsData, scoreboardData] = await Promise.all([
-          fetchStandings(),
-          fetchAllMatches(),
-        ]);
-
-        const { teams: parsedTeams } = parseStandings(standingsData);
-        const nextTeamMap = Object.fromEntries(
-          parsedTeams.map((team) => [team.id, team]),
-        );
-        const { matches } = parseScoreboard(scoreboardData, nextTeamMap);
-
-        const nextMatchesByStage = ROUND_ORDER.reduce((accumulator, stage) => {
-          accumulator[stage] = matches
-            .filter((match) => match.stage === stage)
-            .sort((a, b) => new Date(a.date) - new Date(b.date));
-          return accumulator;
-        }, {});
-
-        if (!alive) return;
-        setTeamMap(nextTeamMap);
-        setMatchesByStage(nextMatchesByStage);
-        setLoading(false);
-      } catch (err) {
-        if (!alive) return;
-        setError(
-          err instanceof Error ? err.message : "No se pudo cargar el bracket",
-        );
-        setLoading(false);
-      }
-    };
-
-    loadBracket();
-    const interval = setInterval(loadBracket, REFRESH_MS);
-
-    return () => {
-      alive = false;
-      clearInterval(interval);
-    };
-  }, []);
 
   const hasMatches = columns.some((column) => column.matches.length > 0);
   const activeColumn =

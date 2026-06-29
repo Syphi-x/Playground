@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import { fetchCalendarByDate, fetchStandings } from "../services/espnApi";
+import { getLocalDateKey } from "../config/tournamentWeeks";
 import {
   mergeTeamForms,
   parseScoreboard,
@@ -27,11 +28,7 @@ const WorldCupContext = createContext(null);
 const REFRESH_MS = 60_000;
 
 function getTodayYYYYMMDD() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}${mm}${dd}`;
+  return getLocalDateKey(new Date().toISOString()).replaceAll("-", "");
 }
 
 export function WorldCupProvider({ children }) {
@@ -46,9 +43,12 @@ export function WorldCupProvider({ children }) {
     try {
       setError(null);
       const dateStr = getTodayYYYYMMDD();
+      const todayKey = getLocalDateKey(
+        `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}T12:00:00Z`,
+      );
       const [standingsData, scoreboardData] = await Promise.all([
         fetchStandings(),
-        // Usar el calendario ESPN para la fecha actual
+        // Usar el calendario ESPN con historial acumulado hasta hoy.
         fetchCalendarByDate(dateStr),
       ]);
 
@@ -67,12 +67,12 @@ export function WorldCupProvider({ children }) {
       // Merge forms first
       let merged = mergeTeamForms(parsedTeams, teamForms);
 
-      // Ajuste local: sumar los puntos de los partidos ya finalizados del día
-      // Esto corrige el caso en que el endpoint de standings aún no refleja
-      // el resultado del partido más reciente consultado por el scoreboard.
+      // Ajuste local: sumar solo los puntos de los partidos finalizados de hoy.
+      // El endpoint de standings suele ir ligeramente por detrás del marcador.
       const todaysAwards = {};
       for (const m of parsedMatches) {
         if (!m || m.status === "scheduled") continue;
+        if (getLocalDateKey(m.date) !== todayKey) continue;
         const homeScore = Number(m.homeScore ?? 0);
         const awayScore = Number(m.awayScore ?? 0);
         let homePts = 0;
