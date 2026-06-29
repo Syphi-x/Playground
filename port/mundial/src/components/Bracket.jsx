@@ -17,19 +17,19 @@ const ROUND_ORDER = [
 
 const ROUND_META = {
   "round-of-32": {
-    label: "Ronda de 32",
-    subtitle: "16avos de final",
+    label: "16avos",
+    subtitle: "Ronda de 32",
   },
   "round-of-16": {
-    label: "Ronda de 16",
-    subtitle: "Octavos de final",
+    label: "8avos",
+    subtitle: "Ronda de 16",
   },
   quarterfinals: {
-    label: "Cuartos",
+    label: "4tos",
     subtitle: "Cuartos de final",
   },
   semifinals: {
-    label: "Semifinales",
+    label: "Semis",
     subtitle: "Semifinales",
   },
   "3rd-place-match": {
@@ -81,6 +81,13 @@ function getRoundColumn(stage) {
   return ROUND_META[stage] ?? { label: stage, subtitle: stage };
 }
 
+function getStageTabs() {
+  return ROUND_ORDER.map((stage) => ({
+    stage,
+    ...getRoundColumn(stage),
+  }));
+}
+
 function getMatchStatusLabel(match) {
   if (match.status === "live") return "En vivo";
   if (match.status === "finished") return "Final";
@@ -112,8 +119,7 @@ function MatchCard({ match, teamMap }) {
   const dayLabel = formatDay(match.date);
 
   return (
-    <article className="relative overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-950/80 shadow-[0_18px_40px_rgba(2,6,23,0.35)]">
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-neon via-cyan-400 to-sky-500" />
+    <article className="overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-950/95 shadow-[0_18px_40px_rgba(2,6,23,0.25)]">
       <div className="p-4">
         <div className="mb-3 flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.25em] text-slate-400">
           <span>{match.group ? `Grupo ${match.group}` : "Eliminatoria"}</span>
@@ -193,7 +199,7 @@ function BracketColumn({ stage, matches, teamMap }) {
   const meta = getRoundColumn(stage);
 
   return (
-    <section className="min-w-[290px] max-w-[340px] flex-1 rounded-3xl border border-slate-700/80 bg-slate-900/50 p-3 backdrop-blur-sm">
+    <section className="w-full rounded-3xl border border-slate-700/80 bg-slate-900/40 p-3 backdrop-blur-sm">
       <div className="mb-4 rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-neon">
           {meta.subtitle}
@@ -253,13 +259,13 @@ export function Bracket() {
   const [teamMap, setTeamMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeStage, setActiveStage] = useState("round-of-32");
 
   const columns = useMemo(
     () =>
-      ROUND_ORDER.map((stage) => ({
-        stage,
-        ...getRoundColumn(stage),
-        matches: matchesByStage[stage] ?? [],
+      getStageTabs().map((tab) => ({
+        ...tab,
+        matches: matchesByStage[tab.stage] ?? [],
       })),
     [matchesByStage],
   );
@@ -311,6 +317,8 @@ export function Bracket() {
   }, []);
 
   const hasMatches = columns.some((column) => column.matches.length > 0);
+  const activeColumn =
+    columns.find((column) => column.stage === activeStage) ?? columns[0];
 
   if (loading && !hasMatches) {
     return <LoadingState />;
@@ -347,16 +355,28 @@ export function Bracket() {
       {error && !hasMatches ? <ErrorState message={error} /> : null}
 
       <div className="overflow-x-auto pb-2">
-        <div className="grid min-w-[1800px] grid-flow-col auto-cols-[minmax(290px,1fr)] gap-4">
+        <div className="mb-4 flex flex-wrap gap-2 border-b border-slate-700 pb-3">
           {columns.map((column) => (
-            <BracketColumn
+            <button
               key={column.stage}
-              stage={column.stage}
-              matches={column.matches}
-              teamMap={teamMap}
-            />
+              type="button"
+              onClick={() => setActiveStage(column.stage)}
+              className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] transition-colors ${
+                activeStage === column.stage
+                  ? "bg-neon text-pitch-950"
+                  : "border border-slate-700 bg-slate-950/80 text-slate-400 hover:text-white"
+              }`}
+            >
+              {column.label}
+            </button>
           ))}
         </div>
+
+        <BracketColumn
+          stage={activeColumn.stage}
+          matches={activeColumn.matches}
+          teamMap={teamMap}
+        />
       </div>
     </div>
   );
